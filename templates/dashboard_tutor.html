@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Tutor Dashboard{% endblock %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">Your Quizzes</h2>
+<ul>
+  {% for quiz in quizzes %}
+    <li class="mb-2">{{ quiz.title }}</li>
+  {% endfor %}
+</ul>
+<a href="{{ url_for('upload_quiz', tutor_id=1) }}" class="bg-purple-500 text-white px-4 py-2 rounded">Upload New Quiz</a>
+
+<h2 class="text-xl font-bold mt-6 mb-4">Average Scores</h2>
+<canvas id="statsChart" width="400" height="200"></canvas>
+<script>
+const labels = [{% for stat in stats %}'{{ stat.title }}',{% endfor %}];
+const data = [{% for stat in stats %}{{ stat.avg_score|default(0) }},{% endfor %}];
+new Chart(document.getElementById('statsChart'), {
+  type: 'bar',
+  data: { labels: labels, datasets: [{ label: 'Average Score', data: data, backgroundColor: 'rgba(54,162,235,0.5)' }] },
+});
+</script>
+{% endblock %}

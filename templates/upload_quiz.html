@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Upload Quiz{% endblock %}
+{% block content %}
+<form method="POST" class="bg-white p-4 rounded shadow">
+  <label class="block mb-2">Quiz Title:</label>
+  <input type="text" name="title" class="border p-2 mb-4 w-full" required>
+  <div id="questions">
+    <div class="mb-4">
+      <label>Question:</label>
+      <input type="text" name="questions" class="border p-2 w-full" required>
+      <label>Answer:</label>
+      <input type="text" name="answers" class="border p-2 w-full" required>
+    </div>
+  </div>
+  <button type="button" onclick="addQA()" class="bg-gray-500 text-white px-3 py-1 rounded">Add Question</button>
+  <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded mt-4">Upload</button>
+</form>
+<script>
+function addQA(){
+  const div=document.createElement('div');
+  div.classList='mb-4';
+  div.innerHTML=`<label>Question:</label>
+  <input type="text" name="questions" class="border p-2 w-full" required>
+  <label>Answer:</label>
+  <input type="text" name="answers" class="border p-2 w-full" required>`;
+  document.getElementById('questions').appendChild(div);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<p class="mb-4">Choose a role to view dashboards:</p>
+<a href="{{ url_for('dashboard_tutor', tutor_id=1) }}" class="bg-blue-500 text-white px-4 py-2 rounded">Tutor Dashboard</a>
+<a href="{{ url_for('dashboard_student', student_id=2) }}" class="bg-green-500 text-white px-4 py-2 rounded">Student Dashboard</a>
+{% endblock %}
