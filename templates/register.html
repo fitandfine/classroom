@@ -2,25 +2,46 @@
 {% block content %}
 <div class="max-w-md bg-white p-6 rounded shadow mx-auto">
   <h2 class="text-xl font-semibold mb-4">Register User</h2>
+
   <form method="post">
-    <label class="block mb-1">Name</label><input name="name" class="w-full border p-2 rounded mb-2" required/>
-    <label class="block mb-1">Email</label><input name="email" type="email" class="w-full border p-2 rounded mb-2" required/>
-    <label class="block mb-1">Password</label><input name="password" type="password" class="w-full border p-2 rounded mb-2" required/>
-    <label class="block mb-1">Role</label>
-    <select name="role" class="w-full border p-2 rounded mb-3">
-      <option value="student">Student</option>
-      {% if current_user.role == 'admin' %}
-      <option value="tutor">Tutor</option>
-      {% endif %}
-    </select>
+    <label class="block mb-1">Name</label>
+    <input name="name" class="w-full border p-2 rounded mb-2" required/>
+
+    <label class="block mb-1">Email</label>
+    <input name="email" type="email" class="w-full border p-2 rounded mb-2" required/>
+
+    <label class="block mb-1">Password</label>
+    <input name="password" type="password" class="w-full border p-2 rounded mb-2" required/>
+
+    {% if admin_create_tutor %}
+      <!-- Admin creating a tutor: hide role input to remove ambiguity -->
+      <input type="hidden" name="role" value="tutor"/>
+      <p class="text-sm text-slate-500 mb-3">You are creating a <strong>tutor</strong> account.</p>
+    {% else %}
+      <!-- Normal flow: show role selector (tutor only shown to admins) -->
+      <label class="block mb-1">Role</label>
+      <select name="role" class="w-full border p-2 rounded mb-3">
+        <option value="student" {% if default_role=='student' %}selected{% endif %}>Student</option>
+        {% if current_user.role == 'admin' %}
+          <option value="tutor" {% if default_role=='tutor' %}selected{% endif %}>Tutor</option>
+        {% endif %}
+      </select>
+    {% endif %}
+
     {% if classes %}
       <label class="block mb-1">Enroll into class (optional)</label>
       <select name="class_id" class="w-full border p-2 rounded mb-3">
         <option value="">-- None --</option>
-        {% for c in classes %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}
+        {% for c in classes %}
+          <option value="{{ c.id }}">{{ c.title }}</option>
+        {% endfor %}
       </select>
     {% endif %}
-    <button class="px-4 py-2 bg-emerald-600 text-white rounded">Create</button>
+
+    <div class="flex gap-2">
+      <button class="px-4 py-2 bg-emerald-600 text-white rounded">Create</button>
+      <a href="{{ url_for('index') }}" class="px-4 py-2 bg-slate-100 rounded">Cancel</a>
+    </div>
   </form>
 </div>
 {% endblock %}
