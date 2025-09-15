@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Attendance — Class {{ class_id }}</h2>
+<form method="post" class="bg-white p-4 rounded shadow">
+  {% for s in students %}
+    <div class="mb-3 border p-2 rounded">
+      <div class="flex justify-between items-center">
+        <div>{{ s.name }}</div>
+        <div class="flex items-center gap-2">
+          <label><input type="radio" name="status_{{ s.id }}" value="present" checked/> Present</label>
+          <label><input type="radio" name="status_{{ s.id }}" value="absent"/> Absent</label>
+          <label><input type="radio" name="status_{{ s.id }}" value="justified"/> Justified</label>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label class="block text-sm">Reason (if justified)</label>
+        <input name="reason_{{ s.id }}" class="w-full border p-1 rounded" placeholder="Optional reason for justification"/>
+      </div>
+    </div>
+  {% endfor %}
+  <button class="px-4 py-2 bg-emerald-600 text-white rounded">Submit Attendance</button>
+</form>
+
+<h3 class="mt-6 mb-2">Recent Attendance Records</h3>
+<div class="bg-white p-3 rounded shadow">
+  <ul class="text-sm">
+    {% for a in attendance %}
+      <li class="mb-1">{{ a.student_name }} — {{ a.status }} {% if a.reason %} ({{ a.reason }}){% endif %} — {{ a.marked_at }}</li>
+    {% else %}
+      <li class="text-slate-500">No attendance records yet</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
