@@ -1,29 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Upload Quiz{% endblock %}
 {% block content %}
-<form method="POST" class="bg-white p-4 rounded shadow">
-  <label class="block mb-2">Quiz Title:</label>
-  <input type="text" name="title" class="border p-2 mb-4 w-full" required>
-  <div id="questions">
-    <div class="mb-4">
-      <label>Question:</label>
-      <input type="text" name="questions" class="border p-2 w-full" required>
-      <label>Answer:</label>
-      <input type="text" name="answers" class="border p-2 w-full" required>
-    </div>
-  </div>
-  <button type="button" onclick="addQA()" class="bg-gray-500 text-white px-3 py-1 rounded">Add Question</button>
-  <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded mt-4">Upload</button>
-</form>
-<script>
-function addQA(){
-  const div=document.createElement('div');
-  div.classList='mb-4';
-  div.innerHTML=`<label>Question:</label>
-  <input type="text" name="questions" class="border p-2 w-full" required>
-  <label>Answer:</label>
-  <input type="text" name="answers" class="border p-2 w-full" required>`;
-  document.getElementById('questions').appendChild(div);
-}
-</script>
+<h2 class="text-xl font-semibold mb-4">Upload Quiz (Class {{ class_id }})</h2>
+<div class="bg-white p-4 rounded shadow max-w-3xl">
+  <form method="post">
+    <label class="block mb-1">Title</label><input name="title" class="w-full border p-2 rounded mb-2" required/>
+    <label class="block mb-1">Description</label><input name="description" class="w-full border p-2 rounded mb-2"/>
+    <label class="block mb-1">Questions (paste JSON)</label>
+    <textarea name="questions_json" class="w-full border p-2 rounded mb-2" rows="10" placeholder='[{"question_text":"...","choices":["a","b"],"answer_index":0,"points":1}]'></textarea>
+    <div class="text-sm text-slate-500 mb-2">Alternatively you can expand the UI to add question forms (this textarea keeps the app single-file friendly).</div>
+    <button class="px-4 py-2 bg-emerald-600 text-white rounded">Create Quiz</button>
+  </form>
+</div>
 {% endblock %}

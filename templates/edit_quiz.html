@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Edit Quiz: {{ quiz.title }}</h2>
+<div class="bg-white p-4 rounded shadow max-w-3xl">
+  <form method="post">
+    <label class="block mb-1">Title</label><input name="title" value="{{ quiz.title }}" class="w-full border p-2 rounded mb-2" required/>
+    <label class="block mb-1">Description</label><input name="description" value="{{ quiz.description }}" class="w-full border p-2 rounded mb-2"/>
+    <label class="block mb-1">Questions (JSON)</label>
+    <textarea name="questions_json" class="w-full border p-2 rounded mb-2" rows="12">{{ questions_json }}</textarea>
+    <button class="px-4 py-2 bg-emerald-600 text-white rounded">Save</button>
+  </form>
+</div>
+{% endblock %}

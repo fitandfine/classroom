@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">{{ quiz.title }}</h2>
+<form method="post" class="bg-white p-4 rounded shadow max-w-3xl">
+  {% for q in questions %}
+    <div class="mb-3 border p-3 rounded">
+      <div class="font-medium">{{ loop.index }}. {{ q.text }} <span class="text-xs text-slate-400">({{ q.points }} pt)</span></div>
+      <div class="mt-2 space-y-1">
+        {% for choice in q.choices %}
+          <label class="flex items-center gap-2">
+            <input type="radio" name="q_{{ q.id }}" value="{{ loop.index0 }}"/>
+            <span>{{ choice }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+  <button class="px-4 py-2 bg-sky-600 text-white rounded">Submit</button>
+</form>
+{% endblock %}
