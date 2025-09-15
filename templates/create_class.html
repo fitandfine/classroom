@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md bg-white p-6 rounded shadow mx-auto">
+  <h2 class="text-xl font-semibold mb-4">Create Class</h2>
+  <form method="post">
+    <label class="block mb-1">Title</label>
+    <input name="title" class="w-full border p-2 rounded mb-2" required/>
+
+    <label class="block mb-1">Description</label>
+    <textarea name="description" class="w-full border p-2 rounded mb-3" rows="4"></textarea>
+
+    <div class="flex gap-2">
+      <button class="px-4 py-2 bg-sky-600 text-white rounded">Create Class</button>
+      <a href="{{ url_for('tutor_dashboard') }}" class="px-4 py-2 bg-slate-100 rounded">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

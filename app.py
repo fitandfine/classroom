@@ -70,56 +70,79 @@ def logout():
 @login_required
 def register():
     # only admin or tutors can register users:
-    if current_user.role not in ("admin","tutor"):
+    if current_user.role not in ("admin", "tutor"):
         flash("Forbidden", "danger")
         return redirect(url_for("index"))
+
     if request.method == "POST":
         name = request.form["name"].strip()
         email = request.form["email"].strip().lower()
-        role = request.form["role"]
+        role = request.form.get("role", "student").strip()
         password = request.form["password"]
-        # restrictions: only admin can create tutors; tutors can create students
+
+        # Validate role
+        if role not in ("student", "tutor"):
+            flash("Invalid role selection", "danger")
+            return redirect(url_for("register"))
+
+        # Only admin may create tutors
         if role == "tutor" and current_user.role != "admin":
             flash("Only admin can create tutors", "danger")
             return redirect(url_for("register"))
+
+        # Prevent creating admin via UI
         if role == "admin":
             flash("Creating admin via UI is disabled", "danger")
             return redirect(url_for("register"))
+
         pw_hash = generate_password_hash(password)
         try:
             uid = DB.create_user(name, email, pw_hash, role)
             flash(f"User {name} ({role}) created with id {uid}", "success")
-            # If tutor created a student, optionally enroll into tutor's class if provided
-            if role == "student" and "class_id" in request.form:
+
+            # If tutor created a student (or admin created a student), optionally enroll into class
+            if role == "student" and request.form.get("class_id"):
                 try:
                     class_id = int(request.form["class_id"])
                     DB.enroll_student(class_id, uid)
-                except:
+                except Exception:
                     pass
+
             return redirect(url_for("index"))
         except Exception as e:
             flash(f"Failed to create user: {e}", "danger")
-    # show classes if current_user.tutor for enrolling convenience
+            return redirect(url_for("register"))
+
+    # GET: show registration form
     classes = []
     if current_user.role == "tutor":
         classes = DB.get_classes_for_tutor(current_user.id)
-    return render_template("register.html", classes=classes)
+
+    # If admin is calling this page, offer tutor creation as well (dropdown)
+    admin_create_tutor = (current_user.role == "admin")
+    return render_template("register.html", classes=classes, admin_create_tutor=admin_create_tutor, default_role=None)
 
 # -----------------------
 # Admin-only: register tutors (convenience)
 # -----------------------
-@app.route("/admin/register_tutor", methods=["GET","POST"])
+@app.route("/admin/register_tutor", methods=["GET", "POST"])
 @login_required
 def admin_register_tutor():
     if current_user.role != "admin":
         flash("Forbidden", "danger")
         return redirect(url_for("index"))
+
     if request.method == "POST":
-        name = request.form["name"]; email = request.form["email"]; pw = request.form["password"]
-        uid = DB.create_user(name, email, generate_password_hash(pw), "tutor")
-        flash("Tutor created", "success")
+        name = request.form["name"].strip()
+        email = request.form["email"].strip().lower()
+        password = request.form["password"]
+        # Force role to tutor (safety)
+        uid = DB.create_user(name, email, generate_password_hash(password), "tutor")
+        flash(f"Tutor {name} created (id: {uid})", "success")
         return redirect(url_for("index"))
-    return render_template("register.html", admin_create_tutor=True)
+
+    # Render the shared register template but force role to tutor (hidden field)
+    return render_template("register.html", admin_create_tutor=True, default_role="tutor")
 
 # -----------------------
 # Tutor dashboard & features
