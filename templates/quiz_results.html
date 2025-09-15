@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Results: {{ quiz.title }}</h2>
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="md:col-span-2 bg-white p-4 rounded shadow">
+    <h3 class="font-semibold mb-2">Submissions</h3>
+    <ul class="space-y-2">
+      {% for s in submissions %}
+        <li class="border p-2 rounded">
+          <div class="flex justify-between"><div><strong>{{ s.student_name }}</strong></div><div>{{ s.score }}%</div></div>
+          <div class="text-xs text-slate-500">{{ s.submitted_at }}</div>
+        </li>
+      {% else %}
+        <li class="text-slate-500">No submissions yet</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="font-semibold mb-2">Answer Key</h3>
+    <ol class="list-decimal list-inside text-sm space-y-2">
+      {% for q in questions %}
+        <li><div class="font-medium">{{ q.question_text }}</div><div class="text-slate-600">Correct: {{ q.choices[q.answer_index] }}</div></li>
+      {% endfor %}
+    </ol>
+  </div>
+</div>
+{% endblock %}
