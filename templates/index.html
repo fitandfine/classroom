@@ -1,7 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 {% block content %}
-<p class="mb-4">Choose a role to view dashboards:</p>
-<a href="{{ url_for('dashboard_tutor', tutor_id=1) }}" class="bg-blue-500 text-white px-4 py-2 rounded">Tutor Dashboard</a>
-<a href="{{ url_for('dashboard_student', student_id=2) }}" class="bg-green-500 text-white px-4 py-2 rounded">Student Dashboard</a>
+<h1 class="text-2xl font-semibold mb-4">Welcome to Classroom</h1>
+
+{% if current_user.is_authenticated %}
+  {% if current_user.role == 'tutor' %}
+    <div class="space-x-2">
+      <a href="{{ url_for('tutor_dashboard') }}" class="px-3 py-2 bg-sky-600 text-white rounded">Tutor Dashboard</a>
+      <a href="{{ url_for('create_class') }}" class="px-3 py-2 bg-emerald-600 text-white rounded">Create Class</a>
+      <a href="{{ url_for('register') }}" class="px-3 py-2 bg-slate-100 rounded">Register Student</a>
+    </div>
+  {% elif current_user.role == 'student' %}
+    <a href="{{ url_for('student_dashboard') }}" class="px-3 py-2 bg-sky-600 text-white rounded">Student Dashboard</a>
+  {% elif current_user.role == 'admin' %}
+    <div class="space-x-2">
+      <a href="{{ url_for('admin_register_tutor') }}" class="px-3 py-2 bg-emerald-600 text-white rounded">Create Tutor</a>
+    </div>
+  {% endif %}
+{% else %}
+  <p>Please <a href="{{ url_for('login') }}" class="text-sky-600">login</a> to continue.</p>
+{% endif %}
+
 {% endblock %}
