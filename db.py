@@ -9,15 +9,17 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, "classroom.db")
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
+    # wait up to 5 seconds for a lock before failing
+    conn = sqlite3.connect(DB_PATH, timeout=5, detect_types=sqlite3.PARSE_DECLTYPES, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    # enable foreign keys
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
+
 
 def init_db(seed: bool = False):
     """Create schema and optionally seed with basic admin/tutor/student and sample data."""
     conn = get_connection()
+    conn.execute("PRAGMA journal_mode=WAL;")  # Better read/write concurrency
     cur = conn.cursor()
     # Users
     cur.executescript("""
@@ -113,16 +115,20 @@ def init_db(seed: bool = False):
     conn.close()
 
 # helper functions used by app.py
-def create_user(name: str, email: str, password_hash: str, role: str) -> int:
+def create_user(name, email, password_hash, role):
     conn = get_connection()
-    cur = conn.cursor()
-    ts = datetime.utcnow().isoformat()
-    cur.execute("INSERT INTO users (name,email,password_hash,role,created_at) VALUES (?,?,?,?,?)",
-                (name, email, password_hash, role, ts))
-    uid = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return uid
+    try:
+        cur = conn.cursor()
+        ts = datetime.utcnow().isoformat()
+        cur.execute(
+            "INSERT INTO users (name,email,password_hash,role,created_at) VALUES (?,?,?,?,?)",
+            (name, email, password_hash, role, ts)
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
 
 def get_user_by_email(email: str) -> Optional[sqlite3.Row]:
     conn = get_connection()
