@@ -1,48 +1,76 @@
 {% extends "base.html" %}
 {% block title %}Tutor Dashboard{% endblock %}
+
 {% block content %}
-<h2 class="text-xl font-bold mb-4">Tutor Dashboard – {{ current_user.name }}</h2>
+<h2 class="text-2xl font-bold mb-6">Tutor Dashboard – {{ current_user.name }}</h2>
 
-<div class="grid md:grid-cols-2 gap-4">
+<div class="grid md:grid-cols-2 gap-6">
   {% for entry in class_data %}
-  <div class="bg-white p-4 rounded shadow">
-    <h3 class="font-semibold text-lg">{{ entry.class.title }}</h3>
-    <p class="text-sm text-slate-600 mb-2">{{ entry.class.description }}</p>
-    <div class="text-sm mb-2">Students: {{ entry.students|length }}</div>
-
-    <div class="flex gap-2 mb-4">
-      <a href="{{ url_for('tutor_upload_quiz', class_id=entry.class.id) }}" class="px-3 py-1 bg-sky-600 text-white rounded">Create Quiz</a>
-      <a href="{{ url_for('tutor_attendance', class_id=entry.class.id) }}" class="px-3 py-1 bg-amber-500 text-white rounded">Mark Attendance</a>
-      <a href="{{ url_for('export_attendance', class_id=entry.class.id) }}" class="px-3 py-1 bg-slate-100 rounded">Export Attendance</a>
+  <div class="bg-white rounded-lg shadow-lg p-5">
+    <div class="flex justify-between items-center mb-3">
+      <div>
+        <h3 class="font-semibold text-lg">{{ entry.class.title }}</h3>
+        <p class="text-sm text-slate-500">{{ entry.class.description or 'No description' }}</p>
+      </div>
+      <span class="text-sm text-gray-400">Students: {{ entry.students|length }}</span>
     </div>
 
-    <h4 class="font-medium">Attendance Summary</h4>
-    <ul class="mb-4 text-sm">
-      {% for day in entry.attendance %}
-      <li>{{ day.date }}: P={{ day.present }}, A={{ day.absent }}, J={{ day.justified }}</li>
-      {% else %}
-      <li class="text-slate-500">No attendance recorded.</li>
-      {% endfor %}
-    </ul>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <a href="{{ url_for('tutor_upload_quiz', class_id=entry.class.id) }}" class="px-3 py-1 bg-sky-600 text-white rounded hover:bg-sky-700 transition">Create Quiz</a>
+      <a href="{{ url_for('tutor_attendance', class_id=entry.class.id) }}" class="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition">Mark Attendance</a>
+      <a href="{{ url_for('export_attendance', class_id=entry.class.id) }}" class="px-3 py-1 bg-slate-100 text-gray-700 rounded hover:bg-slate-200 transition">Export Attendance</a>
+    </div>
 
-    <h4 class="font-medium">Quizzes</h4>
-    <ul class="space-y-1 text-sm">
+    <!-- Attendance Summary Table -->
+    <h4 class="font-medium mb-2">Attendance Summary</h4>
+    {% if entry.students %}
+    <div class="overflow-x-auto mb-4">
+      <table class="min-w-full bg-white rounded shadow text-sm">
+        <thead class="bg-gray-50 border-b">
+          <tr>
+            <th class="py-2 px-4 text-left">Student</th>
+            <th class="py-2 px-4 text-left">P</th>
+            <th class="py-2 px-4 text-left">A</th>
+            <th class="py-2 px-4 text-left">J</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in entry.students %}
+          <tr class="border-b hover:bg-gray-50 transition">
+            <td class="py-2 px-4">{{ s.name }}</td>
+            <td class="py-2 px-4">{{ s.present or 0 }}</td>
+            <td class="py-2 px-4">{{ s.absent or 0 }}</td>
+            <td class="py-2 px-4">{{ s.justified or 0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-slate-500 text-sm mb-4">No students enrolled.</p>
+    {% endif %}
+
+    <!-- Quizzes -->
+    <h4 class="font-medium mb-2">Quizzes</h4>
+    {% if entry.quizzes %}
+    <ul class="space-y-2">
       {% for stats in entry.quizzes %}
-      <li class="flex justify-between items-center border rounded p-2">
+      <li class="flex justify-between items-center border rounded p-3 hover:shadow transition">
         <div>
-          <strong>{{ stats.quiz.title }}</strong>
-          <div class="text-xs text-slate-500">{{ stats.quiz.description or '' }}</div>
+          <h5 class="font-semibold">{{ stats.quiz.title }}</h5>
+          <p class="text-xs text-slate-500">{{ stats.quiz.description or 'No description' }}</p>
         </div>
         <div class="flex gap-2 items-center">
-          <div class="text-xs">Avg: {{ stats.avg_score }}%</div>
-          <a href="{{ url_for('edit_quiz', quiz_id=stats.quiz.id) }}" class="px-2 py-1 bg-slate-100 rounded">Edit</a>
-          <a href="{{ url_for('export_quiz_csv', quiz_id=stats.quiz.id) }}" class="px-2 py-1 bg-slate-100 rounded">CSV</a>
+          <span class="text-xs font-medium">Avg: {{ stats.avg_score }}%</span>
+          <a href="{{ url_for('edit_quiz', quiz_id=stats.quiz.id) }}" class="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">Edit</a>
+          <a href="{{ url_for('export_quiz_csv', quiz_id=stats.quiz.id) }}" class="px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">CSV</a>
         </div>
       </li>
-      {% else %}
-      <li class="text-slate-500">No quizzes yet.</li>
       {% endfor %}
     </ul>
+    {% else %}
+    <p class="text-slate-500 text-sm">No quizzes yet.</p>
+    {% endif %}
   </div>
   {% else %}
   <p class="text-slate-500">No classes yet. Create one to get started.</p>
