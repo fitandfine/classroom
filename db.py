@@ -352,6 +352,83 @@ def get_all_classes_with_students_and_quizzes():
     conn.close()
     return rows
 
+def get_student_attendance(student_id: int):
+    """
+    Return all attendance records for a specific student, joined with class info.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT a.*, c.title AS class_title
+        FROM attendance a
+        JOIN classes c ON c.id = a.class_id
+        WHERE a.student_id = ?
+        ORDER BY a.marked_at DESC
+    """, (student_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_attendance_summary(class_id: int):
+    """
+    Summarize attendance counts per status for a class.
+    Returns: {'present': X, 'absent': Y, 'justified': Z}
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT status, COUNT(*) AS count
+        FROM attendance
+        WHERE class_id = ?
+        GROUP BY status
+    """, (class_id,))
+    rows = cur.fetchall()
+    conn.close()
+    summary = {'present': 0, 'absent': 0, 'justified': 0}
+    for r in rows:
+        summary[r['status']] = r['count']
+    return summary
+
+def get_average_score(quiz_id: int) -> float:
+    """Return the average score for a quiz. Returns 0.0 if no submissions."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT AVG(score) AS avg_score FROM submissions WHERE quiz_id = ?", (quiz_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row["avg_score"] if row and row["avg_score"] is not None else 0.0
+
+
+def get_student_quizzes(student_id: int):
+    """
+    Return all quizzes for classes a student is enrolled in, 
+    including their score (if submitted) and class info.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT q.*, c.title AS class_title, s.score AS score, s.submitted_at
+        FROM quizzes q
+        JOIN classes c ON c.id = q.class_id
+        JOIN enrollments e ON e.class_id = c.id
+        LEFT JOIN submissions s 
+          ON s.quiz_id = q.id AND s.student_id = ?
+        WHERE e.user_id = ?
+        ORDER BY q.created_at DESC
+    """, (student_id, student_id))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def count_submissions(quiz_id: int) -> int:
+    """Return the total number of submissions for a quiz."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS cnt FROM submissions WHERE quiz_id = ?", (quiz_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row["cnt"] if row else 0
+
 
 def export_submissions_csv(quiz_id: int) -> str:
     rows = get_submissions_for_quiz(quiz_id)

@@ -43,16 +43,16 @@
   <tbody>
     {% for q in quizzes %}
     <tr class="border-b">
-      <td class="py-2 px-4">{{ q.quiz.title }}</td>
-      <td class="py-2 px-4">{{ q.class.title }}</td>
+      <td class="py-2 px-4">{{ q.title }}</td>
+      <td class="py-2 px-4">{{ q.class_title }}</td>
       <td class="py-2 px-4">
-        {% if q.submitted %}Completed ({{ q.score }}%){% else %}Not Taken{% endif %}
+        {% if q.score is not none %}Completed ({{ q.score }}%){% else %}Not Taken{% endif %}
       </td>
       <td class="py-2 px-4">
-        {% if not q.submitted %}
-        <a href="{{ url_for('take_quiz', quiz_id=q.quiz.id) }}" class="px-3 py-1 bg-sky-600 text-white rounded">Take Quiz</a>
+        {% if q.score is none %}
+        <a href="{{ url_for('take_quiz', quiz_id=q.id) }}" class="px-3 py-1 bg-sky-600 text-white rounded">Take Quiz</a>
         {% else %}
-        <a href="{{ url_for('quiz_results', quiz_id=q.quiz.id) }}" class="px-3 py-1 bg-slate-100 rounded">View Results</a>
+        <a href="{{ url_for('quiz_results', quiz_id=q.id) }}" class="px-3 py-1 bg-slate-100 rounded">View Results</a>
         {% endif %}
       </td>
     </tr>
@@ -61,4 +61,5 @@
     {% endfor %}
   </tbody>
 </table>
+
 {% endblock %}
