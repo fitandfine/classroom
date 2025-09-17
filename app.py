@@ -151,20 +151,29 @@ def admin_register_tutor():
 @login_required
 def tutor_dashboard():
     if current_user.role != "tutor":
-        flash("Only tutors can access tutor dashboard", "danger")
+        flash("Forbidden","danger")
         return redirect(url_for("index"))
+
     classes = DB.get_classes_for_tutor(current_user.id)
-    # prepare per-class quizzes and analytics
     class_data = []
     for c in classes:
+        students = DB.get_students_in_class(c["id"])
         quizzes = DB.get_quizzes_for_class(c["id"])
-        # compute avg score per quiz
-        quiz_stats = []
-        for q in quizzes:
-            subs = DB.get_submissions_for_quiz(q["id"])
-            avg = round(sum([s["score"] for s in subs]) / len(subs), 2) if subs else 0.0
-            quiz_stats.append({"quiz": q, "avg_score": avg, "num_submissions": len(subs)})
-        class_data.append({"class": c, "quizzes": quiz_stats, "students": DB.get_students_in_class(c["id"])})
+        attendance_summary = DB.get_attendance_summary(c["id"])
+        quiz_stats = [
+            {
+                "quiz": q,
+                "avg_score": DB.get_average_score(q["id"]),
+                "num_submissions": DB.count_submissions(q["id"])
+            }
+            for q in quizzes
+        ]
+        class_data.append({
+            "class": c,
+            "students": students,
+            "attendance": attendance_summary,
+            "quizzes": quiz_stats
+        })
     return render_template("tutor_dashboard.html", class_data=class_data)
 
 @app.route("/tutor/create_class", methods=["GET","POST"])
@@ -283,31 +292,19 @@ def export_attendance(class_id):
 @app.route("/student")
 @login_required
 def student_dashboard():
-    if current_user.role != "student": flash("Forbidden","danger"); return redirect(url_for("index"))
-    # gather quizzes for enrolled classes
-    conn_quizzes = []
-    # naive: list classes student enrolled in then quizzes
-    conn = DB.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-      SELECT c.* FROM classes c
-      JOIN enrollments e ON e.class_id = c.id
-      WHERE e.user_id = ?
-    """, (current_user.id,))
-    classes = cur.fetchall()
-    quizzes = []
-    for c in classes:
-        qz = DB.get_quizzes_for_class(c["id"])
-        for q in qz:
-            # check submission
-            conn2 = DB.get_connection()
-            cur2 = conn2.cursor()
-            cur2.execute("SELECT * FROM submissions WHERE quiz_id = ? AND student_id = ?", (q["id"], current_user.id))
-            sub = cur2.fetchone()
-            conn2.close()
-            quizzes.append({"quiz": q, "class": c, "submitted": bool(sub), "score": sub["score"] if sub else None})
-    conn.close()
-    return render_template("student_dashboard.html", quizzes=quizzes)
+    if current_user.role != "student":
+        flash("Forbidden","danger")
+        return redirect(url_for("index"))
+
+    classes = DB.get_classes_for_student(current_user.id)
+    attendance = DB.get_student_attendance(current_user.id)
+    quizzes = DB.get_student_quizzes(current_user.id)
+    return render_template(
+        "student_dashboard.html",
+        classes=classes,
+        attendance=attendance,
+        quizzes=quizzes
+    )
 
 @app.route("/quiz/<int:quiz_id>/take", methods=["GET","POST"])
 @login_required

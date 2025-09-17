@@ -282,6 +282,77 @@ def get_attendance_for_class(class_id: int):
     conn.close()
     return rows
 
+def get_classes_for_student(student_id: int):
+    """Return all classes a student is enrolled in with tutor info."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+      SELECT c.*, u.name AS tutor_name, u.email AS tutor_email
+      FROM classes c
+      JOIN enrollments e ON e.class_id = c.id
+      JOIN users u ON u.id = c.tutor_id
+      WHERE e.user_id = ?
+    """, (student_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_student_attendance_summary(student_id: int):
+    """Summarize attendance counts for a student across all classes."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+      SELECT c.title AS class_title,
+             SUM(CASE WHEN a.status='present' THEN 1 ELSE 0 END) AS presents,
+             SUM(CASE WHEN a.status='absent' THEN 1 ELSE 0 END) AS absents,
+             SUM(CASE WHEN a.status='justified' THEN 1 ELSE 0 END) AS justified
+      FROM attendance a
+      JOIN classes c ON c.id = a.class_id
+      WHERE a.student_id = ?
+      GROUP BY c.id
+    """, (student_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_quizzes_for_student(student_id: int):
+    """List quizzes for all classes the student is enrolled in, with submission info."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+      SELECT q.*, c.title AS class_title, c.id AS class_id, s.score AS score
+      FROM quizzes q
+      JOIN classes c ON c.id = q.class_id
+      JOIN enrollments e ON e.class_id = c.id
+      LEFT JOIN submissions s ON s.quiz_id = q.id AND s.student_id = ?
+      WHERE e.user_id = ?
+      ORDER BY q.created_at DESC
+    """, (student_id, student_id))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_all_classes_with_students_and_quizzes():
+    """Admin convenience: all classes with tutors, enrolled students count, and quiz count."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+      SELECT c.id, c.title, c.description,
+             u.name AS tutor_name,
+             (SELECT COUNT(*) FROM enrollments e WHERE e.class_id = c.id) AS student_count,
+             (SELECT COUNT(*) FROM quizzes q WHERE q.class_id = c.id) AS quiz_count
+      FROM classes c
+      JOIN users u ON u.id = c.tutor_id
+      ORDER BY c.created_at DESC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
 def export_submissions_csv(quiz_id: int) -> str:
     rows = get_submissions_for_quiz(quiz_id)
     lines = ["student_name,student_email,score,submitted_at"]
