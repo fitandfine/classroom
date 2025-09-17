@@ -39,7 +39,7 @@
       <tbody>
         {% for a in attendance %}
         <tr class="border-b hover:bg-gray-50 transition">
-          <td class="py-2 px-4">{{ a.date or '-' }}</td>
+          <td class="py-2 px-4">{{ a.marked_at or '-' }}</td>
           <td class="py-2 px-4">{{ a.class_title }}</td>
           <td class="py-2 px-4">
             {% if a.status == 'present' %}
